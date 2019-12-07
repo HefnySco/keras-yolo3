@@ -105,6 +105,8 @@ python train.py --model_path model_data/yolov3-tiny.h5 --classes_path  /some_pat
 ```python
 python yolo_video.py --model model_data/yolov3-tiny.h5 --anchors_path model_data/tiny_yolo_anchors.txt  --classes_path model_data/coco_classes.txt --input /dev/video0
 
+python yolo_video.py --model model_data/yolov3-tiny.h5 --anchors_path model_data/tiny_yolo_anchors.txt  --classes_path model_data/coco_classes.txt --input   /some_path/images/img1.jpg --output  /some_path/images/outimt.jpg --image 
+
 ```
 ---
 

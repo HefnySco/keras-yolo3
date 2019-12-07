@@ -18,7 +18,12 @@ annotation_path = 'train.txt'
 log_dir = 'logs/000/'
 classes_path = 'model_data/voc_classes.txt'
 anchors_path = 'model_data/yolo_anchors.txt'
-model_path = 'model_data/tiny_yolo_weights.h5'                
+model_path = 'model_data/tiny_yolo_weights.h5'  
+load_weights_file_name = ''  # e.g. trained_weights_stage_1.h5
+
+freezed_epochs = 400
+unfreezed_epochs = 90
+
 def _main():
     class_names = get_classes(classes_path)
     num_classes = len(class_names)
@@ -43,7 +48,7 @@ def _main():
     val_split = 0.1
     with open(annotation_path) as f:
         lines = f.readlines()
-    np.random.seed(10101)
+    np.random.seed(10111)
     np.random.shuffle(lines)
     np.random.seed(None)
     num_val = int(len(lines)*val_split)
@@ -55,14 +60,16 @@ def _main():
         model.compile(optimizer=Adam(lr=1e-3), loss={
             # use custom yolo_loss Lambda layer.
             'yolo_loss': lambda y_true, y_pred: y_pred})
-
+        
+        if (len(load_weights_file_name)!=0):
+            model.load_weights(log_dir + load_weights_file_name,skip_mismatch=True)
         batch_size = 32
         print('Train on {} samples, val on {} samples, with batch size {}.'.format(num_train, num_val, batch_size))
         model.fit_generator(data_generator_wrapper(lines[:num_train], batch_size, input_shape, anchors, num_classes),
                 steps_per_epoch=max(1, num_train//batch_size),
                 validation_data=data_generator_wrapper(lines[num_train:], batch_size, input_shape, anchors, num_classes),
                 validation_steps=max(1, num_val//batch_size),
-                epochs=50,
+                epochs=freezed_epochs,
                 initial_epoch=0,
                 callbacks=[logging, checkpoint])
         model.save_weights(log_dir + 'trained_weights_stage_1.h5')
@@ -81,8 +88,8 @@ def _main():
             steps_per_epoch=max(1, num_train//batch_size),
             validation_data=data_generator_wrapper(lines[num_train:], batch_size, input_shape, anchors, num_classes),
             validation_steps=max(1, num_val//batch_size),
-            epochs=100,
-            initial_epoch=50,
+            epochs=unfreezed_epochs + freezed_epochs,
+            initial_epoch=freezed_epochs,
             callbacks=[logging, checkpoint, reduce_lr, early_stopping])
         model.save_weights(log_dir + 'trained_weights_final.h5')
 
@@ -211,11 +218,17 @@ if __name__ == '__main__':
         help='path to yolo_anchors.txt, default ' + anchors_path
     )
 
+    parser.add_argument(
+        '--weights_file_name', type=str,
+        help='.h5 file for weights to preload, default ' + load_weights_file_name
+    )
+
 
     FLAGS = parser.parse_args()
     classes_path = FLAGS.classes_path
     model_path = FLAGS.model_path
     annotation_path = FLAGS.annotation_path
     anchors_path = FLAGS.anchors_path
-
+    if hasattr(FLAGS,'weights_file_name'):
+        load_weights_file_name = FLAGS.weights_file_name
     _main()

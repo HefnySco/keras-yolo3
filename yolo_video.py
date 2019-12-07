@@ -2,6 +2,7 @@ import sys
 import argparse
 from yolo import YOLO, detect_video
 from PIL import Image
+#/mnt/86093cf7-b6cb-48dd-b350-1102eba44f05/Downloads/DataSets/projectK/S1/webots_quadPlus_ProjectK
 
 def detect_img(yolo):
     while True:
