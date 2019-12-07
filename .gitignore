@@ -3,6 +3,8 @@
 *.weights
 *.h5
 logs/
+model_data/*.cfg
+model_data/darknet/*
 *_test.py
 
 # Byte-compiled / optimized / DLL files
