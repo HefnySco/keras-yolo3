@@ -27,7 +27,7 @@ For Tiny YOLOv3, just do in a similar way, just specify model path and anchor pa
 ### Usage
 Use --help to see usage of yolo_video.py:
 ```
-usage: yolo_video.py [-h] [--model_path MODEL] [--anchors_path ANCHORS]
+usage: yolo_video.py [-h] [--model MODEL] [--anchors ANCHORS]
                      [--classes CLASSES] [--gpu_num GPU_NUM] [--image]
                      [--input] [--output]
 
@@ -37,21 +37,21 @@ positional arguments:
 
 optional arguments:
   -h, --help         show this help message and exit
-  --model_path MODEL      path to model weight file, default model_data/yolo.h5
-  --anchors_path ANCHORS  path to anchor definitions, default
+  --model MODEL      path to model weight file, default model_data/yolo.h5
+  --anchors ANCHORS  path to anchor definitions, default
                      model_data/yolo_anchors.txt
-  --classes_path CLASSES  path to class definitions, default
+  --classes CLASSES  path to class definitions, default
                      model_data/coco_classes.txt
   --gpu_num GPU_NUM  Number of GPU to use, default 1
   --image            Image detection mode, will ignore all positional arguments
 ```
 ---
 
-4. MultiGPU usage: use `--gpu_num N` to use N GPUs. It is passed to the [Keras multi_gpu_model()](https://keras.io/utils/#multi_gpu_model).
+MultiGPU usage: use `--gpu_num N` to use N GPUs. It is passed to the [Keras multi_gpu_model()](https://keras.io/utils/#multi_gpu_model).
 
 ## Training
 
-1. Generate your own annotation file and class names file.  
+1. Generate your own annotation file and class names file
     One row for one image;  
     Row format: `image_file_path box1 box2 ... boxN`;  
     Box format: `x_min,y_min,x_max,y_max,class_id` (no space).  
@@ -63,20 +63,49 @@ optional arguments:
     ...
     ```
 
-2. Make sure you have run `python convert.py -w yolov3.cfg yolov3.weights model_data/yolo_weights.h5`  
+2. Make sure you have run `python convert.py -w yolov3.cfg yolov3.weights model_data/yolo_weights.h5`
     The file model_data/yolo_weights.h5 is used to load pretrained weights.
 
-3. Modify train.py and start training.  
-    `python train.py`  
+3. Modify train.py and start training.
+    `python train.py`
     Use your trained weights or checkpoint weights with command line option `--model model_file` when using yolo_video.py
-    Remember to modify class path or anchor path, with `--classes class_file` and `--anchors anchor_file`.
+    Remember to modify class path or anchor path, with `--classes_path class_file` and `--anchors anchor_file`.
 
-If you want to use original pretrained weights for YOLOv3:  
-    1. `wget https://pjreddie.com/media/files/darknet53.conv.74`  
-    2. rename it as darknet53.weights  
-    3. `python convert.py -w darknet53.cfg darknet53.weights model_data/darknet53_weights.h5`  
+If you want to use original pretrained weights for YOLOv3:
+    1. `wget https://pjreddie.com/media/files/darknet53.conv.74`
+    2. rename it as darknet53.weights
+    3. `python convert.py -w darknet53.cfg darknet53.weights model_data/darknet53_weights.h5`
     4. use model_data/darknet53_weights.h5 in train.py
+---
+##Training 2
+1. store images in folder /some_path/images
+2. use [Colabeler  or any similar app](http://www.colabeler.com/ "Colabeler  or any similar app") to label images as described above.
+3. generate XML files using above app.
+4. create your **voc_custom_classes.txt** file contains classes you want to detect.
+5. use** xml_to_yolo.py** to generate train.txt files.
+---
+##Sample Steps
 
+####DarkNet to Yolo Conversion
+```python
+python convert.py model_data/darknet/yolov3-tiny.cfg model_data/darknet/yolov3-tiny.weights model_data/yolov3-tiny.h5
+```
+
+####Training
+
+```python
+python xml_to_yolo.py --classes_path /some_path/voc_custom_classes.txt  --xml  /some_path/xml_folder/ --yolo_file_path train.txt
+```
+
+```python
+python train.py --model_path model_data/yolov3-tiny.h5 --classes_path  /some_path/voc_custom_classes.txt --anchors_path model_data/tiny_yolo_anchors.txt --annotation_path /some_path/train.txt 
+```
+
+#### Running
+```python
+python yolo_video.py --model model_data/yolov3-tiny.h5 --anchors_path model_data/tiny_yolo_anchors.txt  --classes_path model_data/coco_classes.txt --input /dev/video0
+
+```
 ---
 
 ## Some issues to know
