@@ -23,6 +23,8 @@ load_weights_file_name = ''  # e.g. trained_weights_stage_1.h5
 
 freezed_epochs = 400
 unfreezed_epochs = 90
+freezed_lr = 1e-3
+unfreezed_lr = 1e-4
 
 def _main():
     class_names = get_classes(classes_path)
@@ -57,7 +59,7 @@ def _main():
     # Train with frozen layers first, to get a stable loss.
     # Adjust num epochs to your dataset. This step is enough to obtain a not bad model.
     if True:
-        model.compile(optimizer=Adam(lr=1e-3), loss={
+        model.compile(optimizer=Adam(lr=freezed_lr), loss={
             # use custom yolo_loss Lambda layer.
             'yolo_loss': lambda y_true, y_pred: y_pred})
         
@@ -78,8 +80,10 @@ def _main():
     # Train longer if the result is not good.
     if True:
         for i in range(len(model.layers)):
-            model.layers[i].trainable = True
-        model.compile(optimizer=Adam(lr=1e-4), loss={'yolo_loss': lambda y_true, y_pred: y_pred}) # recompile to apply the change
+            model.layers[i].trainable = True #unfreeze all layers
+        model.compile(optimizer=Adam(lr=unfreezed_lr), loss={
+            # use custom yolo_loss Lambda layer.
+            'yolo_loss': lambda y_true, y_pred: y_pred}) # recompile to apply the change
         print('Unfreeze all of the layers.')
 
         batch_size = 32 # note that more GPU memory is required after unfreezing the body
